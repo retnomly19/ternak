@@ -11,25 +11,37 @@ class Ternak extends Model
 
     protected $table = 'ternak';
 
+    // Primary key menggunakan string (bukan auto increment)
     protected $primaryKey = 'id_ternak';
     public $incrementing = false;
     protected $keyType = 'string';
 
+    // Kolom yang bisa diisi massal
     protected $fillable = [
-    'id_ternak',
-    'foto',
-    'jenis',
-    'umur',
-    'jenis_kelamin',
-    'harga_beli',
-    'kondisi',
-    'tanggal_masuk',
-    'vaksinasi',
-    'tanggal_cek_medis',
-    'nama_pemasok',
-    'alamat_pemasok',
-    'telepon_pemasok',
-    'hubungan_pemasok',
-];
+        'id_ternak',
+        'foto',
+        'kategori',
+        'jenis',
+        'lokasi',
+        'umur',
+        'jenis_kelamin',
+        'harga_beli',
+        'kondisi',
+        'tanggal_masuk',
+        'vaksinasi',
+        'cek_medis_terakhir',
+        'pemasok_id',  // wajib ditambahkan supaya relasi jalan
+    ];
 
+    // Casting kolom tanggal ke Carbon instance
+    protected $casts = [
+        'tanggal_masuk' => 'date',
+        'cek_medis_terakhir' => 'date',
+    ];
+
+    // Relasi ke Pemasok (1 Ternak dimiliki oleh 1 Pemasok)
+    public function pemasok()
+    {
+        return $this->belongsTo(Pemasok::class, 'pemasok_id');
+    }
 }

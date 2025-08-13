@@ -1,160 +1,140 @@
-{{-- resources/views/ternak/index.blade.php --}}
-
 @extends('layouts.app')
 
-@section('header')
-    <div class="flex justify-between items-center">
-        <h2 class="text-lg font-semibold text-gray-800">
-            Data Ternak
-        </h2>
-
-        <div class="flex items-center space-x-2">
-            <button @click="openModal = true"
-                class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">
-                + Tambah Data Ternak
-            </button>
-            <button @click="openEdit = true"
-                class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition">
-                ✎ Edit
-            </button>
-        </div>
-    </div>
-@endsection
-
 @section('content')
-<div x-data="{ openModal: false, openEdit: false, activeTab: 'umum' }">
-    <div class="py-6">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-md rounded-lg p-6">
-                <!-- Kategori Filter dan Search -->
-                <div class="flex justify-between items-center mb-4">
-                    <select class="border rounded px-3 py-2 text-sm">
-                        <option value="">Semua Kategori</option>
-                        <option value="domba">Domba</option>
-                        <option value="kambing">Kambing</option>
-                        <option value="sapi">Sapi</option>
-                    </select>
+<div class="container mx-auto px-4 py-4 max-w-7xl">
+    <h1 class="text-3xl font-bold mb-4">Data Ternak</h1>
 
-                    <input type="text" placeholder="Cari ternak..." class="border px-3 py-2 rounded text-sm">
-                </div>
-
-                <!-- Tabel Ternak -->
-<table class="min-w-full border text-sm">
-    <thead class="bg-gray-100">
-        <tr>
-            <th class="px-4 py-2 border"></th>
-            <th class="px-4 py-2 border">ID</th>
-            <th class="px-4 py-2 border">Foto</th>
-            <th class="px-4 py-2 border">Jenis</th>
-            <th class="px-4 py-2 border">Umur</th>
-            <th class="px-4 py-2 border">Jenis Kelamin</th>
-            <th class="px-4 py-2 border">Harga Beli</th>
-            <th class="px-4 py-2 border">Kondisi</th>
-            <th class="px-4 py-2 border">Vaksinasi</th>
-            <th class="px-4 py-2 border">Tanggal Cek Medis</th>
-            <th class="px-4 py-2 border">Tanggal Masuk</th>
-            <th class="px-4 py-2 border">Last Update</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach($ternak as $item)
-        <tr>
-            <td class="border px-2 py-1 text-center">
-                <input type="checkbox" name="selected[]" value="{{ $item->id }}">
-            </td>
-            <td class="border px-4 py-2">{{ $item->id }}</td>
-            <td class="border px-4 py-2">
-                @if($item->foto)
-                    <img src="{{ asset($item->foto) }}" class="w-16 h-16 object-cover rounded">
-                @else
-                    -
-                @endif
-            </td>
-            <td class="border px-4 py-2">{{ $item->jenis }}</td>
-            <td class="border px-4 py-2">{{ $item->umur }} bulan</td>
-            <td class="border px-4 py-2">{{ ucfirst($item->jenis_kelamin) }}</td>
-            <td class="border px-4 py-2">Rp{{ number_format($item->harga_beli ?? 0, 0, ',', '.') }}</td>
-            <td class="border px-4 py-2">{{ $item->kondisi ?? '-' }}</td>
-            <td class="border px-4 py-2">{{ $item->vaksinasi ?? '-' }}</td>
-            <td class="border px-4 py-2">{{ $item->tanggal_cek_medis ?? '-' }}</td>
-            <td class="border px-4 py-2">{{ $item->tanggal_masuk }}</td>
-            <td class="border px-4 py-2">{{ $item->updated_at->format('Y-m-d') }}</td>
-        </tr>
-        @endforeach
-    </tbody>
-</table>
-
-            </div>
+    @if(session('success'))
+        <div class="bg-green-100 text-green-800 p-4 rounded mb-4">
+            {{ session('success') }}
         </div>
+    @endif
+
+    @if(session('error'))
+        <div class="bg-red-100 text-red-800 p-4 rounded mb-4">
+            {{ session('error') }}
+        </div>
+    @endif
+
+    <!-- Filter & Search -->
+    <form method="GET" action="{{ route('ternak.index') }}" class="mb-4 flex flex-wrap gap-4 items-end">
+        <div>
+            <label for="search" class="block font-semibold mb-1 text-sm">Cari (ID, Jenis, Vaksinasi)</label>
+            <input type="text" name="search" id="search" value="{{ request('search') }}"
+                class="border rounded px-3 py-2 w-48" placeholder="Cari...">
+        </div>
+
+        <div>
+            <label for="filter_kategori" class="block font-semibold mb-1 text-sm">Kategori</label>
+            <select name="filter_kategori" id="filter_kategori" class="border rounded px-3 py-2 w-36">
+                <option value="">-- Semua --</option>
+                @foreach(['Domba', 'Kambing', 'Sapi', 'Kerbau', 'Ayam', 'Kuda'] as $cat)
+                    <option value="{{ $cat }}" @selected(request('filter_kategori') == $cat)>{{ $cat }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div>
+            <label for="filter_lokasi" class="block font-semibold mb-1 text-sm">Lokasi</label>
+            <select name="filter_lokasi" id="filter_lokasi" class="border rounded px-3 py-2 w-36">
+                <option value="">-- Semua --</option>
+                @foreach(['Kandang A','Kandang B','Kandang C','Kandang D','Kandang E','Kandang F','Kandang G','Kandang H'] as $loc)
+                    <option value="{{ $loc }}" @selected(request('filter_lokasi') == $loc)>{{ $loc }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div>
+            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm">
+                Filter
+            </button>
+        </div>
+
+        <div>
+            <a href="{{ route('ternak.index') }}" class="text-gray-600 hover:underline text-sm">Reset</a>
+        </div>
+    </form>
+
+    <div class="mb-4">
+        <a href="{{ route('ternak.create') }}"
+            class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-sm">
+            + Tambah Data Ternak
+        </a>
     </div>
 
-    <!-- Modal Tambah Data -->
-    <div x-show="openModal" x-cloak @click.away="openModal = false" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
-        <div class="bg-white w-full max-w-3xl p-6 rounded-lg shadow-lg overflow-y-auto max-h-[90vh]">
+    <!-- Table -->
+    <div class="overflow-x-auto bg-white rounded shadow">
+        <table class="min-w-full divide-y divide-gray-200 table-auto text-sm">
+            <thead class="bg-gray-100">
+                <tr>
+                    <th class="px-3 py-2 text-left font-semibold">Foto</th>
+                    <th class="px-3 py-2 text-left font-semibold">ID Ternak</th>
+                    <th class="px-3 py-2 text-left font-semibold">Kategori</th>
+                    <th class="px-3 py-2 text-left font-semibold">Jenis</th>
+                    <th class="px-3 py-2 text-left font-semibold">Lokasi</th>
+                    <th class="px-3 py-2 text-left font-semibold">Umur (bln)</th>
+                    <th class="px-3 py-2 text-left font-semibold">Jenis Kelamin</th>
+                    <th class="px-3 py-2 text-left font-semibold">Harga Beli</th>
+                    <th class="px-3 py-2 text-left font-semibold">Kondisi</th>
+                    <th class="px-3 py-2 text-left font-semibold">Tanggal Masuk</th>
+                    <th class="px-3 py-2 text-left font-semibold">Vaksinasi</th>
+                    <th class="px-3 py-2 text-left font-semibold">Cek Medis Terakhir</th>
+                    <th class="px-3 py-2 text-left font-semibold">Pemasok</th>
+                    <th class="px-3 py-2 text-center font-semibold">Aksi</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                @forelse ($ternak as $item)
+                    <tr>
+                        <td class="px-3 py-2">
+                            @if($item->foto)
+                                <img src="{{ asset('storage/' . $item->foto) }}" alt="Foto Ternak" class="w-12 h-12 object-cover rounded">
+                            @else
+                                <span class="text-gray-400">Tidak ada</span>
+                            @endif
+                        </td>
+                        <td class="px-3 py-2">{{ $item->id_ternak }}</td>
+                        <td class="px-3 py-2">{{ $item->kategori }}</td>
+                        <td class="px-3 py-2">{{ $item->jenis }}</td>
+                        <td class="px-3 py-2">{{ $item->lokasi }}</td>
+                        <td class="px-3 py-2">{{ $item->umur }}</td>
+                        <td class="px-3 py-2">{{ $item->jenis_kelamin }}</td>
+                        <td class="px-3 py-2">Rp {{ number_format($item->harga_beli, 2, ',', '.') }}</td>
+                        <td class="px-3 py-2">{{ $item->kondisi }}</td>
+                        <td class="px-3 py-2">{{ \Carbon\Carbon::parse($item->tanggal_masuk)->format('d/m/Y') }}</td>
+                        <td class="px-3 py-2">{{ $item->vaksinasi ?? '-' }}</td>
+                        <td class="px-3 py-2">{{ $item->cek_medis_terakhir ? \Carbon\Carbon::parse($item->cek_medis_terakhir)->format('d/m/Y') : '-' }}</td>
+                        <td class="px-3 py-2">{{ $item->pemasok->nama ?? '-' }}</td>
+                        <td class="px-3 py-2 text-center">
+                            <div class="flex justify-center space-x-2">
+                                <!-- Edit icon -->
+                                <a href="{{ route('ternak.edit', $item->id_ternak) }}" class="text-blue-600 hover:text-blue-800" title="Edit">
+                                    ✏️
+                                </a>
+                                <!-- Delete icon -->
+                                <form action="{{ route('ternak.destroy', $item->id_ternak) }}" method="POST" class="inline" onsubmit="return confirm('Yakin hapus data ini?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-red-600 hover:text-red-800" title="Hapus">
+                                        🗑️
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="14" class="px-3 py-6 text-center text-gray-500">
+                            Data ternak tidak ditemukan.
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
 
-            <!-- Tab Header -->
-            <div class="flex mb-4 border-b">
-                <button class="px-4 py-2 font-semibold" :class="{ 'border-b-2 border-blue-500': activeTab === 'umum' }" @click="activeTab = 'umum'">Informasi Umum</button>
-                <button class="px-4 py-2 font-semibold" :class="{ 'border-b-2 border-blue-500': activeTab === 'kontak' }" @click="activeTab = 'kontak'">Kontak Pemasok</button>
-            </div>
-
-            <form action="{{ route('ternak.store') }}" method="POST" enctype="multipart/form-data">
-                @csrf
-
-                <!-- Informasi Umum -->
-                <div x-show="activeTab === 'umum'" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium">ID Ternak</label>
-                        <input type="text" name="id" value="{{ $newId ?? '' }}" readonly class="w-full border px-3 py-2 rounded">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium">Jenis Ternak</label>
-                        <input type="text" name="jenis" class="w-full border px-3 py-2 rounded">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium">Umur (bulan)</label>
-                        <input type="number" name="umur" class="w-full border px-3 py-2 rounded">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium">Jenis Kelamin</label>
-                        <select name="jenis_kelamin" class="w-full border px-3 py-2 rounded">
-                            <option value="jantan">Jantan</option>
-                            <option value="betina">Betina</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium">Tanggal Masuk</label>
-                        <input type="date" name="tanggal_masuk" class="w-full border px-3 py-2 rounded">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium">Foto</label>
-                        <input type="file" name="foto" class="w-full border px-3 py-2 rounded">
-                    </div>
-                </div>
-
-                <!-- Kontak Pemasok -->
-                <div x-show="activeTab === 'kontak'" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium">Nama Pemasok</label>
-                        <input type="text" name="nama_pemasok" class="w-full border px-3 py-2 rounded">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium">Nomor WA Pemasok</label>
-                        <input type="text" name="wa_pemasok" class="w-full border px-3 py-2 rounded">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium">Asal Pemasok</label>
-                        <input type="text" name="asal_pemasok" class="w-full border px-3 py-2 rounded">
-                    </div>
-                </div>
-
-                <div class="flex justify-between mt-6">
-                    <button type="button" @click="openModal = false" class="bg-gray-300 text-black px-4 py-2 rounded hover:bg-gray-400">Batal</button>
-                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Simpan</button>
-                </div>
-            </form>
-
-        </div>
+    <div class="mt-4">
+        {{ $ternak->withQueryString()->links() }}
     </div>
 </div>
 @endsection
